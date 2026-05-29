@@ -98,6 +98,7 @@
 
     label {
       display: block;
+      min-width: 0;
       margin-bottom: 10px;
       font-size: 13px;
       font-weight: 700;
@@ -108,6 +109,7 @@
     textarea,
     select {
       width: 100%;
+      min-width: 0;
       margin-top: 5px;
       padding: 10px 12px;
       border: 1px solid rgba(0, 0, 0, .12);
@@ -127,7 +129,7 @@
 
     .two {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 10px;
     }
 
@@ -547,6 +549,31 @@
         max-height: none;
         border-right: 0;
         border-bottom: 1px solid #d8dee6;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .form-panel {
+        padding: 24px 20px;
+      }
+
+      .two {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .doc-control {
+        grid-template-columns: 52px minmax(0, 1fr) 82px;
+      }
+
+      input,
+      textarea,
+      select {
+        font-size: 16px;
+      }
+
+      .preview-wrap {
+        padding: 18px 12px;
       }
     }
 
