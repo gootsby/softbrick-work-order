@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>작업지시서_소프트브릭</title>
+  <style>
+    :root {
+      --ink: #1d1d1f;
+      --muted: #6e6e73;
+      --line: #d2d2d7;
+      --soft: #f5f5f7;
+      --paper: #fff;
+      --accent: #0071e3;
+      --accent-soft: #f0f7ff;
+      --danger: #ff3b30;
+      --danger-soft: #fff1f0;
+      --shadow: 0 22px 50px rgba(0, 0, 0, .10);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+      color: var(--ink);
+      background: #f5f5f7;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(320px, 410px) minmax(900px, 1fr);
+      min-height: 100vh;
+    }
+
+    .form-panel {
+      max-height: 100vh;
+      overflow: auto;
+      padding: 24px;
+      background: rgba(255, 255, 255, .76);
+      border-right: 1px solid rgba(0, 0, 0, .08);
+      backdrop-filter: blur(20px);
+    }
+
+    .form-panel h1 {
+      margin: 0 0 16px;
+      font-size: 24px;
+    }
+
+    .form-logo {
+      display: block;
+      width: 132px;
+      height: auto;
+      margin: 2px 0 22px;
+      object-fit: contain;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--ink);
+      background: #e9e9ed;
+    }
+
+    button.primary {
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .section {
+      margin-bottom: 14px;
+      padding: 16px;
+      border: 1px solid rgba(0, 0, 0, .08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .88);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .03);
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      margin-top: 5px;
+      padding: 10px 12px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      border-radius: 8px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      background: #fbfbfd;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .manual-input {
+      display: none;
+    }
+
+    .manual-input.active {
+      display: block;
+      margin-top: 8px;
+    }
+
+    .doc-control {
+      display: grid;
+      grid-template-columns: 52px minmax(120px, 1fr) 96px;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .doc-prefix {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      border-radius: 8px;
+      background: #f5f5f7;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .doc-control select,
+    .doc-control input {
+      margin-top: 0;
+    }
+
+    .qty-control {
+      display: grid;
+      grid-template-columns: 40px 1fr 40px;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .qty-control input {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .step-btn {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 8px;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .preview-wrap {
+      padding: 28px;
+      overflow: auto;
+    }
+
+    .sheet {
+      width: 1123px;
+      height: 794px;
+      margin: 0 auto;
+      padding: 38px 42px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: 88px 76px 44px 1fr 108px;
+      gap: 12px;
+      border-radius: 12px;
+    }
+
+    .sheet-header {
+      display: grid;
+      grid-template-columns: 1fr 250px;
+      gap: 20px;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 18px;
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .brand-logo {
+      display: block;
+      width: 116px;
+      height: auto;
+      margin-bottom: 8px;
+      object-fit: contain;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+    }
+
+    .title-row h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .doc-number {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .date-card {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      align-self: end;
+      border: 1px solid rgba(0, 0, 0, .10);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 15px;
+      background: #fff;
+    }
+
+    .date-card div {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 9px 12px;
+    }
+
+    .date-card div:nth-child(1),
+    .date-card div:nth-child(2) {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .date-card div:nth-child(1),
+    .date-card div:nth-child(3) {
+      border-right: 1px solid var(--line);
+    }
+
+    .date-card .label {
+      justify-content: center;
+      margin-bottom: 0;
+      background: var(--soft);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .date-card .due-label,
+    .date-card .due-value {
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-weight: 900;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1.45fr .95fr .85fr;
+      gap: 9px;
+    }
+
+    .summary-card {
+      border: 1px solid rgba(0, 0, 0, .10);
+      border-radius: 10px;
+      padding: 9px 11px;
+      background: #fff;
+      min-width: 0;
+    }
+
+    .summary-card.important {
+      border-color: rgba(0, 113, 227, .22);
+      background: var(--accent-soft);
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .required-label::before {
+      content: "* ";
+      color: var(--danger);
+      font-weight: 900;
+    }
+
+    .value {
+      min-width: 0;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: pre-line;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .customer-strip {
+      display: grid;
+      grid-template-columns: 82px 132px 82px 150px 64px 1fr;
+      border: 1px solid rgba(0, 0, 0, .10);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .strip-label,
+    .strip-value {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      padding: 6px 10px;
+      border-right: 1px solid var(--line);
+      font-size: 14px;
+      line-height: 1.2;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .strip-label {
+      justify-content: center;
+      background: var(--soft);
+      font-weight: 700;
+    }
+
+    .strip-value {
+      font-weight: 800;
+    }
+
+    .strip-value:last-child {
+      border-right: 0;
+      font-size: 13px;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .product-panel,
+    .side-panel,
+    .memo-panel,
+    .check-panel {
+      border: 1px solid rgba(0, 0, 0, .10);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .product-panel {
+      display: grid;
+      grid-template-rows: 38px 1fr;
+      min-height: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 38px;
+      padding: 8px 12px;
+      background: var(--soft);
+      color: var(--ink);
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .product-stage {
+      width: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(180deg, #fff, #fbfbfd);
+    }
+
+    .product-stage img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      transform: scale(1.02);
+    }
+
+    .image-placeholder {
+      color: #98a1ad;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    img:not([src]),
+    img[hidden],
+    .image-placeholder[hidden] {
+      display: none !important;
+    }
+
+    .side-panel {
+      display: grid;
+      grid-template-rows: repeat(3, 1fr);
+      min-height: 0;
+    }
+
+    .sample {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      min-height: 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sample:last-child {
+      border-bottom: 0;
+    }
+
+    .sample-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px;
+      background: var(--soft);
+      border-right: 1px solid var(--line);
+      font-size: 15px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .sample-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
+      padding: 0;
+      overflow: hidden;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      white-space: pre-wrap;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .sample-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .memo-body {
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.35;
+      text-align: center;
+      white-space: pre-wrap;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 70px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 11px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .check-item:nth-child(2n) {
+      border-right: 0;
+    }
+
+    .box {
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--ink);
+      border-radius: 5px;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 1200px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .form-panel {
+        max-height: none;
+        border-right: 0;
+        border-bottom: 1px solid #d8dee6;
+      }
+    }
+
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .form-panel {
+        display: none;
+      }
+
+      .app {
+        display: block;
+      }
+
+      .preview-wrap {
+        padding: 0;
+        overflow: visible;
+      }
+
+      .sheet {
+        width: 297mm;
+        height: 210mm;
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="form-panel">
+      <img class="form-logo" src="softbrick-logo-black.png" alt="SOFTBRICK">
+      <h1>작업지시서</h1>
+      <div class="actions">
+        <button class="primary" type="button" id="printBtn">인쇄</button>
+        <button type="button" id="saveBtn">저장</button>
+        <button type="button" id="loadBtn">불러오기</button>
+        <button type="button" id="resetBtn">샘플</button>
+      </div>
+
+      <section class="section">
+        <h2>기본 정보</h2>
+        <div class="two">
+          <label>발주일
+            <input type="date" data-field="orderDate" value="2026-05-26">
+          </label>
+          <label>납기일
+            <input type="date" data-field="dueDate" value="2026-06-16">
+          </label>
+        </div>
+        <label>문서번호
+          <div class="doc-control">
+            <span class="doc-prefix">SB</span>
+            <select data-field="docQuarter">
+              <option value="1">1분기 (1~3월)</option>
+              <option value="2">2분기 (4~6월)</option>
+              <option value="3">3분기 (7~9월)</option>
+              <option value="4">4분기 (10~12월)</option>
+            </select>
+            <input data-field="docSeq" value="006">
+          </div>
+        </label>
+        <div class="two">
+          <label>담당자
+            <input data-field="manager" value="정민구">
+          </label>
+          <label>담당자 연락처
+            <input data-field="managerPhone" value="010-4784-9909">
+          </label>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>제품 정보</h2>
+        <div class="two">
+          <label>브랜드
+            <input data-field="brand" value="소프트브릭">
+          </label>
+          <label>모델
+            <select data-field="model">
+              <option>폰타 (F1-0001)</option>
+              <option>프라토 (P1-0004)</option>
+              <option>도브 (D1-0005)</option>
+              <option>소마 (S1-0024)</option>
+              <option>루나 (V4-0018)</option>
+            </select>
+          </label>
+        </div>
+        <label>구성
+          <input data-field="config" placeholder="2,100mm 라운지형">
+        </label>
+        <div class="two">
+          <label>팔걸이 위치
+            <select data-field="armrest">
+              <option>양쪽 팔걸이</option>
+              <option>앉았을 때 좌측 팔걸이</option>
+              <option>앉았을 때 우측 팔걸이</option>
+            </select>
+          </label>
+          <label>수량
+            <div class="qty-control">
+              <button class="step-btn" type="button" data-step="-1" aria-label="수량 줄이기">-</button>
+              <input type="number" min="1" step="1" data-field="qty" value="1">
+              <button class="step-btn" type="button" data-step="1" aria-label="수량 늘리기">+</button>
+            </div>
+          </label>
+        </div>
+        <div class="two">
+          <label>원단
+            <select data-field="fabric" id="fabricSelect"></select>
+            <input class="manual-input" data-field="fabricManual" id="fabricManual" placeholder="원단명 직접 입력">
+          </label>
+          <label>색상
+            <select data-field="color" id="colorSelect"></select>
+            <input class="manual-input" data-field="colorManual" id="colorManual" placeholder="색상명 직접 입력">
+          </label>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>고객 정보</h2>
+        <div class="two">
+          <label>고객명
+            <input data-field="customer" placeholder="홍길동">
+          </label>
+          <label>연락처
+            <input data-field="phone" placeholder="010-0000-0000">
+          </label>
+        </div>
+        <label>주소
+          <input data-field="address" placeholder="서울 강남구 언주로86길 11, 601호">
+        </label>
+      </section>
+
+      <section class="section">
+        <h2>메모와 옵션</h2>
+        <label>공장 전달 메모
+          <textarea data-field="memo" placeholder="원단: 6/1(월) 이후 입고 예정&#10;출고: 6/16(화) 예정"></textarea>
+        </label>
+        <label>기타
+          <textarea data-field="option2Text"></textarea>
+        </label>
+      </section>
+
+      <section class="section">
+        <h2>이미지</h2>
+        <label>제품 이미지
+          <input type="file" accept="image/*" data-image="productImage">
+        </label>
+        <label>원단/색상 이미지 직접 업로드
+          <input type="file" accept="image/*" data-image="fabricImage">
+        </label>
+        <label>라벨 이미지
+          <input type="file" accept="image/*" data-image="option1Image">
+        </label>
+        <label>기타 이미지
+          <input type="file" accept="image/*" data-image="option2Image">
+        </label>
+      </section>
+    </aside>
+
+    <section class="preview-wrap" aria-label="작업지시서 미리보기">
+      <article class="sheet">
+        <header class="sheet-header">
+          <div class="title-block">
+            <img class="brand-logo" src="softbrick-logo-black.png" alt="SOFTBRICK">
+            <div class="title-row">
+              <h1>소프트브릭 작업지시서</h1>
+              <div class="doc-number" data-preview="docNoDisplay">SB-1Q-006</div>
+            </div>
+          </div>
+          <div class="date-card">
+            <div class="label">발주일</div>
+            <div data-preview="orderDateDisplay">2026. 5. 26</div>
+            <div class="label due-label">납기일</div>
+            <div class="due-value" data-preview="dueDateDisplay">2026. 6. 16</div>
+          </div>
+        </header>
+
+        <section class="summary-grid">
+          <div class="summary-card important">
+            <span class="label required-label">모델</span>
+            <div class="value" data-preview="model">폰타 (F1-0001)</div>
+          </div>
+          <div class="summary-card important">
+            <span class="label required-label">구성</span>
+            <div class="value" data-preview="configDisplay"></div>
+          </div>
+          <div class="summary-card">
+            <span class="label required-label">원단 / 색상</span>
+            <div class="value"><span data-preview="fabric">가브리엘</span> / <span data-preview="color">화이트</span></div>
+          </div>
+          <div class="summary-card">
+            <span class="label required-label">수량</span>
+            <div class="value" data-preview="qtyDisplay">1 SET</div>
+          </div>
+        </section>
+
+        <section class="customer-strip">
+          <div class="strip-label">고객명</div>
+          <div class="strip-value" data-preview="customer"></div>
+          <div class="strip-label">연락처</div>
+          <div class="strip-value" data-preview="phone"></div>
+          <div class="strip-label">주소</div>
+          <div class="strip-value" data-preview="address"></div>
+        </section>
+
+        <section class="main-content">
+          <div class="product-panel">
+            <div class="panel-head">
+              <span>제품 이미지</span>
+              <span data-preview="managerDisplay">담당자: 정민구(010-4784-9909)</span>
+            </div>
+            <div class="product-stage">
+              <img id="productImagePreview" alt="제품 이미지" hidden>
+              <div class="image-placeholder" id="productImagePlaceholder">제품 이미지</div>
+            </div>
+          </div>
+
+          <aside class="side-panel">
+            <div class="sample">
+              <div class="sample-title">원단<br>색상</div>
+              <div class="sample-box">
+                <img id="fabricImagePreview" alt="원단/색상 이미지" hidden>
+                <span data-preview="fabricMemo"></span>
+              </div>
+            </div>
+            <div class="sample">
+              <div class="sample-title">라벨</div>
+              <div class="sample-box">
+                <img id="option1ImagePreview" src="assets/label-softbrick.JPEG" alt="라벨 이미지">
+                <span data-preview="option1Text"></span>
+              </div>
+            </div>
+            <div class="sample">
+              <div class="sample-title">기타</div>
+              <div class="sample-box">
+                <img id="option2ImagePreview" alt="기타 이미지" hidden>
+                <span data-preview="option2Text"></span>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <footer class="footer-grid">
+          <section class="memo-panel">
+            <div class="panel-head">공장 전달 메모</div>
+            <div class="memo-body" data-preview="memo"></div>
+          </section>
+          <section class="check-panel">
+            <div class="panel-head">제작 체크</div>
+            <div class="check-grid">
+              <div class="check-item"><span class="box"></span>원단 확인</div>
+              <div class="check-item"><span class="box"></span>색상 확인</div>
+              <div class="check-item"><span class="box"></span>방향 확인</div>
+              <div class="check-item"><span class="box"></span>출고 검수</div>
+            </div>
+          </section>
+        </footer>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const fabricCatalog = {
+      "퓨전": {
+        colors: {
+          "그레이지": "assets/fabrics/fusion-01-greige.jpg",
+          "샌드": "assets/fabrics/fusion-02-sand.jpg",
+          "아이스": "assets/fabrics/fusion-03-ice.jpg",
+          "머스타드": "assets/fabrics/fusion-08-mustard.jpg"
+        }
+      }
+    };
+
+    const sample = {
+      orderDate: "",
+      dueDate: "",
+      docQuarter: "1",
+      docSeq: "006",
+      manager: "정민구",
+      managerPhone: "010-4784-9909",
+      brand: "소프트브릭",
+      model: "폰타 (F1-0001)",
+      config: "",
+      armrest: "양쪽 팔걸이",
+      fabric: "퓨전",
+      fabricManual: "",
+      color: "그레이지",
+      colorManual: "",
+      qty: "1",
+      customer: "",
+      phone: "",
+      address: "",
+      memo: "",
+      fabricMemo: "",
+      option1Text: "",
+      option2Text: ""
+    };
+
+    const fields = document.querySelectorAll("[data-field]");
+    const previews = document.querySelectorAll("[data-preview]");
+    const printBtn = document.getElementById("printBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const loadBtn = document.getElementById("loadBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const storageKey = "sofa-work-order-prototype-v3";
+    const fabricSelect = document.getElementById("fabricSelect");
+    const colorSelect = document.getElementById("colorSelect");
+    const fabricManual = document.getElementById("fabricManual");
+    const colorManual = document.getElementById("colorManual");
+
+    function dateOffset(days = 0) {
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function defaultValues() {
+      return {
+        ...sample,
+        orderDate: dateOffset(0),
+        dueDate: dateOffset(14)
+      };
+    }
+
+    function formValues() {
+      return Array.from(fields).reduce((values, field) => {
+        values[field.dataset.field] = field.value;
+        return values;
+      }, {});
+    }
+
+    function setPreview(name, value) {
+      previews.forEach((preview) => {
+        if (preview.dataset.preview === name) preview.textContent = value;
+      });
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const [year, month, day] = value.split("-");
+      if (!year || !month || !day) return value;
+      return `${Number(year)}. ${Number(month)}. ${Number(day)}`;
+    }
+
+    function formatDocSeq(value) {
+      const trimmed = String(value || "").trim();
+      if (!trimmed) return "";
+      return /^\d+$/.test(trimmed) ? trimmed.padStart(3, "0") : trimmed;
+    }
+
+    function currentDocNo() {
+      const values = formValues();
+      return `SB-${values.docQuarter || "1"}Q-${formatDocSeq(values.docSeq)}`;
+    }
+
+    function populateFabricOptions(selectedFabric = defaultValues().fabric, selectedColor = defaultValues().color) {
+      fabricSelect.innerHTML = Object.keys(fabricCatalog).map((fabric) => (
+        `<option value="${fabric}">${fabric}</option>`
+      )).join("") + '<option value="직접입력">직접입력</option>';
+      fabricSelect.value = fabricCatalog[selectedFabric] || selectedFabric === "직접입력" ? selectedFabric : Object.keys(fabricCatalog)[0];
+      populateColorOptions(selectedColor);
+      updateManualInputs();
+    }
+
+    function populateColorOptions(selectedColor = defaultValues().color) {
+      const colors = Object.keys(fabricCatalog[fabricSelect.value]?.colors || {});
+      colorSelect.innerHTML = colors.map((color) => `<option value="${color}">${color}</option>`).join("") + '<option value="직접입력">직접입력</option>';
+      colorSelect.value = colors.includes(selectedColor) || selectedColor === "직접입력" ? selectedColor : (colors[0] || "직접입력");
+      updateManualInputs();
+    }
+
+    function updateManualInputs() {
+      fabricManual.classList.toggle("active", fabricSelect.value === "직접입력");
+      colorManual.classList.toggle("active", colorSelect.value === "직접입력");
+    }
+
+    function displayFabric(values) {
+      return values.fabric === "직접입력" ? values.fabricManual : values.fabric;
+    }
+
+    function displayColor(values) {
+      return values.color === "직접입력" ? values.colorManual : values.color;
+    }
+
+    function updateFabricImage() {
+      const values = formValues();
+      const imagePath = fabricCatalog[values.fabric]?.colors?.[values.color];
+      const image = document.getElementById("fabricImagePreview");
+      const text = image?.parentElement.querySelector("span");
+
+      if (!image) return;
+
+      if (!imagePath) {
+        image.removeAttribute("src");
+        image.hidden = true;
+        if (text) text.hidden = false;
+        return;
+      }
+
+      image.src = imagePath;
+      image.hidden = false;
+      if (text) text.hidden = true;
+    }
+
+    function renderDerived() {
+      const values = formValues();
+      const config = values.config && values.armrest ? `${values.config}\n(${values.armrest})` : values.config;
+      const qtyNumber = Math.max(1, Number.parseInt(values.qty, 10) || 1);
+      const manager = values.managerPhone ? `담당자: ${values.manager}(${values.managerPhone})` : `담당자: ${values.manager}`;
+
+      setPreview("orderDateDisplay", formatDate(values.orderDate));
+      setPreview("dueDateDisplay", formatDate(values.dueDate));
+      setPreview("docNoDisplay", currentDocNo());
+      setPreview("configDisplay", config);
+      setPreview("qtyDisplay", `${qtyNumber} SET`);
+      setPreview("managerDisplay", manager);
+      setPreview("fabric", displayFabric(values));
+      setPreview("color", displayColor(values));
+      updateFabricImage();
+    }
+
+    function syncField(name, value) {
+      previews.forEach((preview) => {
+        if (preview.dataset.preview === name) preview.textContent = value;
+      });
+      renderDerived();
+    }
+
+    function writeForm(values) {
+      const defaults = defaultValues();
+      populateFabricOptions(values.fabric ?? defaults.fabric, values.color ?? defaults.color);
+      fields.forEach((field) => {
+        field.value = values[field.dataset.field] ?? defaults[field.dataset.field] ?? "";
+        syncField(field.dataset.field, field.value);
+      });
+      renderDerived();
+    }
+
+    fields.forEach((field) => {
+      field.addEventListener("input", () => {
+        if (field.dataset.field === "qty") {
+          field.value = Math.max(1, Number.parseInt(field.value, 10) || 1);
+        }
+        syncField(field.dataset.field, field.value);
+      });
+      field.addEventListener("change", () => {
+        if (field.dataset.field === "fabric") {
+          populateColorOptions();
+        }
+        updateManualInputs();
+        syncField(field.dataset.field, field.value);
+      });
+    });
+
+    document.querySelectorAll("[data-step]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const qtyField = document.querySelector('[data-field="qty"]');
+        const nextValue = Math.max(1, (Number.parseInt(qtyField.value, 10) || 1) + Number.parseInt(button.dataset.step, 10));
+        qtyField.value = String(nextValue);
+        syncField("qty", qtyField.value);
+      });
+    });
+
+    document.querySelectorAll("[data-image]").forEach((input) => {
+      input.addEventListener("change", () => {
+        const target = document.getElementById(`${input.dataset.image}Preview`);
+        const placeholder = document.getElementById(`${input.dataset.image}Placeholder`);
+        const siblingText = target?.parentElement.querySelector("span");
+        const file = input.files && input.files[0];
+
+        if (!file || !target) {
+          if (target) {
+            target.removeAttribute("src");
+            target.hidden = true;
+          }
+          if (placeholder) placeholder.hidden = false;
+          if (siblingText) siblingText.hidden = false;
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          target.src = reader.result;
+          target.hidden = false;
+          if (placeholder) placeholder.hidden = true;
+          if (siblingText) siblingText.hidden = true;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    saveBtn.addEventListener("click", () => {
+      localStorage.setItem(storageKey, JSON.stringify(formValues()));
+      saveBtn.textContent = "저장됨";
+      setTimeout(() => {
+        saveBtn.textContent = "저장";
+      }, 1200);
+    });
+
+    loadBtn.addEventListener("click", () => {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) writeForm(JSON.parse(saved));
+    });
+
+    resetBtn.addEventListener("click", () => writeForm(defaultValues()));
+
+    printBtn.addEventListener("click", () => {
+      const previousTitle = document.title;
+      document.title = `소프트브릭_작업지시서_${currentDocNo()}`;
+      window.print();
+      setTimeout(() => {
+        document.title = previousTitle;
+      }, 1000);
+    });
+
+    writeForm(defaultValues());
+    renderDerived();
+  </script>
+</body>
+</html>
