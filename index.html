@@ -111,6 +111,7 @@
     select {
       width: 100%;
       min-width: 0;
+      max-width: 100%;
       margin-top: 5px;
       padding: 10px 12px;
       border: 1px solid rgba(0, 0, 0, .12);
@@ -121,6 +122,24 @@
       color: var(--ink);
       background: #fbfbfd;
       outline: none;
+    }
+
+    input[type="date"] {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      min-width: 0 !important;
+      inline-size: 100%;
+      min-inline-size: 0 !important;
+      max-inline-size: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      text-align: center;
+    }
+
+    input[type="date"]::-webkit-date-and-time-value {
+      min-width: 0;
+      text-align: center;
     }
 
     textarea {
@@ -551,6 +570,10 @@
         border-right: 0;
         border-bottom: 1px solid #d8dee6;
       }
+
+      .section {
+        overflow: hidden;
+      }
     }
 
     @media (max-width: 640px) {
@@ -562,17 +585,6 @@
       .section {
         padding: 16px 14px;
         overflow: hidden;
-      }
-
-      input[type="date"] {
-        display: block;
-        width: 100% !important;
-        max-width: 100%;
-        min-width: 0;
-        inline-size: 100%;
-        -webkit-appearance: none;
-        appearance: none;
-        text-align: center;
       }
 
       .two {
