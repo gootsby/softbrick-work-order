@@ -40,6 +40,7 @@
     .form-panel {
       max-height: 100vh;
       overflow: auto;
+      min-width: 0;
       padding: 24px;
       background: rgba(255, 255, 255, .76);
       border-right: 1px solid rgba(0, 0, 0, .08);
@@ -555,6 +556,23 @@
     @media (max-width: 640px) {
       .form-panel {
         padding: 24px 20px;
+        overflow-x: hidden;
+      }
+
+      .section {
+        padding: 16px 14px;
+        overflow: hidden;
+      }
+
+      input[type="date"] {
+        display: block;
+        width: 100% !important;
+        max-width: 100%;
+        min-width: 0;
+        inline-size: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        text-align: center;
       }
 
       .two {
