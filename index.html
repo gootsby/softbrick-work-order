@@ -653,6 +653,9 @@
 
       <section class="section">
         <h2>기본 정보</h2>
+        <label>Google Sheets 연동 URL
+          <input data-field="sheetApiUrl" id="sheetApiUrl" placeholder="Apps Script 웹앱 URL">
+        </label>
         <div class="two">
           <label>발주일
             <input type="date" data-field="orderDate" value="2026-05-26">
@@ -912,7 +915,8 @@
       fabricMemo: "",
       option1Text: "",
       option2Text: "",
-      productImageUrl: ""
+      productImageUrl: "",
+      sheetApiUrl: ""
     };
 
     const fields = document.querySelectorAll("[data-field]");
@@ -926,6 +930,7 @@
     const colorSelect = document.getElementById("colorSelect");
     const fabricManual = document.getElementById("fabricManual");
     const colorManual = document.getElementById("colorManual");
+    const sheetApiUrl = document.getElementById("sheetApiUrl");
 
     function dateOffset(days = 0) {
       const date = new Date();
@@ -973,6 +978,65 @@
     function currentDocNo() {
       const values = formValues();
       return `SB-${values.docQuarter || "1"}Q-${formatDocSeq(values.docSeq)}`;
+    }
+
+    function cloudPayload() {
+      return {
+        ...formValues(),
+        docNo: currentDocNo()
+      };
+    }
+
+    function scriptGet(url, params) {
+      return new Promise((resolve, reject) => {
+        const callback = `sheetCallback_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        const query = new URLSearchParams({ ...params, callback });
+        const script = document.createElement("script");
+
+        window[callback] = (data) => {
+          delete window[callback];
+          script.remove();
+          resolve(data);
+        };
+
+        script.onerror = () => {
+          delete window[callback];
+          script.remove();
+          reject(new Error("Google Sheets 응답을 불러오지 못했습니다."));
+        };
+
+        script.src = `${url}?${query.toString()}`;
+        document.body.appendChild(script);
+      });
+    }
+
+    async function saveToSheet() {
+      const url = sheetApiUrl.value.trim();
+      if (!url) return false;
+
+      await fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: new URLSearchParams(cloudPayload())
+      });
+      localStorage.setItem(`${storageKey}:sheetApiUrl`, url);
+      return true;
+    }
+
+    async function loadFromSheet() {
+      const url = sheetApiUrl.value.trim();
+      if (!url) return false;
+
+      const data = await scriptGet(url, { action: "load", docNo: currentDocNo() });
+      if (!data.ok || !data.record) {
+        alert("해당 문서번호의 작업지시서를 찾지 못했습니다.");
+        return true;
+      }
+
+      writeForm({ ...data.record, sheetApiUrl: url });
+      localStorage.setItem(`${storageKey}:sheetApiUrl`, url);
+      return true;
     }
 
     function populateFabricOptions(selectedFabric = defaultValues().fabric, selectedColor = defaultValues().color) {
@@ -1141,7 +1205,19 @@
       });
     });
 
-    saveBtn.addEventListener("click", () => {
+    saveBtn.addEventListener("click", async () => {
+      try {
+        if (await saveToSheet()) {
+          saveBtn.textContent = "시트 저장됨";
+          setTimeout(() => {
+            saveBtn.textContent = "저장";
+          }, 1200);
+          return;
+        }
+      } catch (error) {
+        alert(`Google Sheets 저장에 실패했습니다.\n${error.message}`);
+      }
+
       localStorage.setItem(storageKey, JSON.stringify(formValues()));
       saveBtn.textContent = "저장됨";
       setTimeout(() => {
@@ -1149,7 +1225,13 @@
       }, 1200);
     });
 
-    loadBtn.addEventListener("click", () => {
+    loadBtn.addEventListener("click", async () => {
+      try {
+        if (await loadFromSheet()) return;
+      } catch (error) {
+        alert(`Google Sheets 불러오기에 실패했습니다.\n${error.message}`);
+      }
+
       const saved = localStorage.getItem(storageKey);
       if (saved) writeForm(JSON.parse(saved));
     });
@@ -1166,6 +1248,11 @@
     });
 
     writeForm(defaultValues());
+    const savedSheetUrl = localStorage.getItem(`${storageKey}:sheetApiUrl`);
+    if (savedSheetUrl) {
+      sheetApiUrl.value = savedSheetUrl;
+      syncField("sheetApiUrl", savedSheetUrl);
+    }
     renderDerived();
   </script>
 </body>
