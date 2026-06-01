@@ -777,20 +777,27 @@
           <select data-field="config" id="configSelect"></select>
           <input class="manual-input" data-field="configManual" id="configManual" placeholder="2,100mm 라운지형">
         </label>
+        <label>팔걸이 위치
+          <div class="choice-row">
+            <label><input type="radio" name="armrestChoice" data-field="armrest" value="선택안함"><span>선택안함</span></label>
+            <label><input type="radio" name="armrestChoice" data-field="armrest" value="양쪽"><span>양쪽</span></label>
+            <label><input type="radio" name="armrestChoice" data-field="armrest" value="왼쪽"><span>왼쪽</span></label>
+            <label><input type="radio" name="armrestChoice" data-field="armrest" value="오른쪽"><span>오른쪽</span></label>
+          </div>
+        </label>
         <div class="two">
-          <label>팔걸이 위치
-            <div class="choice-row">
-              <label><input type="radio" name="armrestChoice" data-field="armrest" value="선택안함"><span>선택안함</span></label>
-              <label><input type="radio" name="armrestChoice" data-field="armrest" value="양쪽"><span>양쪽</span></label>
-              <label><input type="radio" name="armrestChoice" data-field="armrest" value="왼쪽"><span>왼쪽</span></label>
-              <label><input type="radio" name="armrestChoice" data-field="armrest" value="오른쪽"><span>오른쪽</span></label>
-            </div>
-          </label>
           <label>수량
             <div class="qty-control">
               <button class="step-btn" type="button" data-step="-1" aria-label="수량 줄이기">-</button>
               <input type="number" min="1" step="1" data-field="qty" value="1">
               <button class="step-btn" type="button" data-step="1" aria-label="수량 늘리기">+</button>
+            </div>
+          </label>
+          <label>스툴
+            <div class="qty-control">
+              <button class="step-btn" type="button" data-step="-1" aria-label="스툴 수량 줄이기">-</button>
+              <input type="number" min="0" step="1" data-field="stoolQty" value="0">
+              <button class="step-btn" type="button" data-step="1" aria-label="스툴 수량 늘리기">+</button>
             </div>
           </label>
         </div>
@@ -1007,6 +1014,7 @@
       color: "그레이지",
       colorManual: "",
       qty: "1",
+      stoolQty: "0",
       customer: "",
       phone: "",
       address: "",
@@ -1307,11 +1315,13 @@
       const map = {
         "선택안함": "",
         "양쪽": "양쪽 팔걸이",
-        "왼쪽": "왼쪽 팔걸이",
-        "오른쪽": "오른쪽 팔걸이",
+        "왼쪽": "앉았을 때 왼쪽 팔걸이",
+        "오른쪽": "앉았을 때 오른쪽 팔걸이",
         "양쪽 팔걸이": "양쪽 팔걸이",
-        "앉았을 때 좌측 팔걸이": "왼쪽 팔걸이",
-        "앉았을 때 우측 팔걸이": "오른쪽 팔걸이"
+        "앉았을 때 좌측 팔걸이": "앉았을 때 왼쪽 팔걸이",
+        "앉았을 때 우측 팔걸이": "앉았을 때 오른쪽 팔걸이",
+        "왼쪽 팔걸이": "앉았을 때 왼쪽 팔걸이",
+        "오른쪽 팔걸이": "앉았을 때 오른쪽 팔걸이"
       };
       return map[value] ?? value ?? "";
     }
@@ -1330,6 +1340,17 @@
         "오른쪽 팔걸이": "오른쪽"
       };
       return map[value] ?? "선택안함";
+    }
+
+    function displayConfigNote(values) {
+      const parts = [];
+      const armrestValue = displayArmrest(values.armrest);
+      const stoolQty = Math.max(0, Number.parseInt(values.stoolQty, 10) || 0);
+
+      if (armrestValue) parts.push(armrestValue);
+      if (stoolQty > 0) parts.push(`스툴 ${stoolQty}개`);
+
+      return parts.join(" + ");
     }
 
     function displayFabric(values) {
@@ -1419,8 +1440,8 @@
     function renderDerived() {
       const values = formValues();
       const configValue = displayConfig(values);
-      const armrestValue = displayArmrest(values.armrest);
-      const config = configValue && armrestValue ? `${configValue}\n(${armrestValue})` : configValue;
+      const configNote = displayConfigNote(values);
+      const config = configValue && configNote ? `${configValue}\n(${configNote})` : configValue;
       const qtyNumber = Math.max(1, Number.parseInt(values.qty, 10) || 1);
       const manager = values.managerPhone ? `담당자: ${values.manager}(${values.managerPhone})` : `담당자: ${values.manager}`;
 
@@ -1469,6 +1490,9 @@
         if (field.dataset.field === "qty") {
           field.value = Math.max(1, Number.parseInt(field.value, 10) || 1);
         }
+        if (field.dataset.field === "stoolQty") {
+          field.value = Math.max(0, Number.parseInt(field.value, 10) || 0);
+        }
         if (field.dataset.field === "productImageUrl") {
           const productImage = document.getElementById("productImagePreview");
           if (productImage) productImage.dataset.manualUpload = "false";
@@ -1490,10 +1514,12 @@
 
     document.querySelectorAll("[data-step]").forEach((button) => {
       button.addEventListener("click", () => {
-        const qtyField = document.querySelector('[data-field="qty"]');
-        const nextValue = Math.max(1, (Number.parseInt(qtyField.value, 10) || 1) + Number.parseInt(button.dataset.step, 10));
+        const qtyField = button.parentElement.querySelector("input");
+        const min = Number.parseInt(qtyField.min, 10) || 0;
+        const fallback = min > 0 ? min : 0;
+        const nextValue = Math.max(min, (Number.parseInt(qtyField.value, 10) || fallback) + Number.parseInt(button.dataset.step, 10));
         qtyField.value = String(nextValue);
-        syncField("qty", qtyField.value);
+        syncField(qtyField.dataset.field, qtyField.value);
       });
     });
 

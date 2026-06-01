@@ -21,6 +21,7 @@ const HEADERS = [
   "color",
   "colorManual",
   "qty",
+  "stoolQty",
   "customer",
   "phone",
   "address",
