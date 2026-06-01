@@ -978,11 +978,11 @@
     const configCatalog = [
       { code: "F1-0001-S1000", name: "1인 기본형" },
       { code: "F1-0001-S1600", name: "1,600 기본형" },
-      { code: "F1-0001-S1600", name: "1,600 라운지형", imageKey: "F1-0001-S1600-lounge" },
+      { code: "F1-0001-S1600L", name: "1,600 라운지형" },
       { code: "F1-0001-S1800", name: "1,800 기본형" },
-      { code: "F1-0001-S1800", name: "1,800 라운지형", imageKey: "F1-0001-S1800-lounge" },
+      { code: "F1-0001-S1800L", name: "1,800 라운지형" },
       { code: "F1-0001-S2000", name: "2,000 기본형" },
-      { code: "F1-0001-S2000", name: "2,000 라운지형", imageKey: "F1-0001-S2000-lounge" },
+      { code: "F1-0001-S2000L", name: "2,000 라운지형" },
       { code: "F1-0001-AA", name: "3인 기본형" },
       { code: "F1-0001-AL", name: "3인 라운지형" },
       { code: "F1-0001-AMA", name: "4인 기본형" },
@@ -994,7 +994,7 @@
     ].map((item) => ({
       ...item,
       label: `${item.name} (${item.code})`,
-      image: `assets/configs/${item.imageKey || item.code}.jpg`
+      image: `assets/configs/${item.code}.jpg`
     }));
 
     const sample = {
