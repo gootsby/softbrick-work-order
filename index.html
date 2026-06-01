@@ -1030,15 +1030,29 @@
     function scriptPost(url, params) {
       return new Promise((resolve, reject) => {
         const frameName = `sheetPostFrame_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        const postToken = `postToken_${Date.now()}_${Math.random().toString(16).slice(2)}`;
         const iframe = document.createElement("iframe");
         const form = document.createElement("form");
-        let submitted = false;
         let settled = false;
 
         const cleanup = () => {
           clearTimeout(timer);
+          window.removeEventListener("message", handleMessage);
           form.remove();
           iframe.remove();
+        };
+
+        const handleMessage = (event) => {
+          const data = event.data;
+          if (!data || data.postToken !== postToken || settled) return;
+
+          settled = true;
+          cleanup();
+          if (data.ok) {
+            resolve(data);
+          } else {
+            reject(new Error(data.error || "Google Sheets 저장에 실패했습니다."));
+          }
         };
 
         const timer = setTimeout(() => {
@@ -1050,20 +1064,14 @@
 
         iframe.name = frameName;
         iframe.hidden = true;
-        iframe.addEventListener("load", () => {
-          if (!submitted || settled) return;
-          settled = true;
-          setTimeout(() => {
-            cleanup();
-            resolve();
-          }, 300);
-        });
 
         form.method = "POST";
         form.action = url;
         form.target = frameName;
         form.style.display = "none";
         form.acceptCharset = "UTF-8";
+
+        params.postToken = postToken;
 
         Object.entries(params).forEach(([name, value]) => {
           const input = document.createElement("input");
@@ -1073,8 +1081,8 @@
           form.appendChild(input);
         });
 
+        window.addEventListener("message", handleMessage);
         document.body.append(iframe, form);
-        submitted = true;
         form.submit();
       });
     }
@@ -1096,8 +1104,9 @@
 
       const payload = { action: "save", ...cloudPayload() };
       if (hasImageUpload(payload)) {
-        await scriptPost(url, payload);
-        const saved = await scriptGet(url, { action: "load", docNo: payload.docNo });
+        const data = await scriptPost(url, payload);
+        if (!data.ok) throw new Error(data.error || "Google Sheets 저장에 실패했습니다.");
+        const saved = await scriptGet(url, { action: "load", docNo: data.docNo || payload.docNo });
         if (!saved.ok || !saved.record) throw new Error("저장 후 시트에서 문서를 확인하지 못했습니다.");
         clearImageUploads();
         writeForm({ ...saved.record, sheetApiUrl: url });

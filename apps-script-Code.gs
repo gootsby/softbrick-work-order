@@ -141,6 +141,13 @@ function json_(payload, callback) {
     .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
 }
 
+function postMessage_(payload) {
+  const text = JSON.stringify(payload).replace(/</g, "\\u003c");
+  return HtmlService.createHtmlOutput(
+    `<script>window.parent.postMessage(${text}, "*");</script>`
+  );
+}
+
 function doGet(e) {
   const params = e.parameter || {};
   const callback = params.callback || "";
@@ -170,5 +177,15 @@ function doGet(e) {
 
 function doPost(e) {
   const params = e.parameter || {};
-  return json_(saveRecord_(params));
+  try {
+    const result = saveRecord_(params);
+    result.postToken = params.postToken || "";
+    return postMessage_(result);
+  } catch (error) {
+    return postMessage_({
+      ok: false,
+      postToken: params.postToken || "",
+      error: error && error.message ? error.message : String(error)
+    });
+  }
 }
