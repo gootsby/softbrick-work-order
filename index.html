@@ -1196,13 +1196,31 @@
       return values.color === "직접입력" ? values.colorManual : values.color;
     }
 
+    function normalizeImageUrl(src) {
+      const value = String(src || "").trim();
+      if (!value) return "";
+
+      const fileMatch = value.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+      if (fileMatch) return `https://drive.google.com/thumbnail?id=${fileMatch[1]}&sz=w1600`;
+
+      const openMatch = value.match(/drive\.google\.com\/open\?id=([^&]+)/);
+      if (openMatch) return `https://drive.google.com/thumbnail?id=${openMatch[1]}&sz=w1600`;
+
+      const ucMatch = value.match(/drive\.google\.com\/uc\?[^#]*[?&]id=([^&]+)/);
+      if (ucMatch) return `https://drive.google.com/thumbnail?id=${ucMatch[1]}&sz=w1600`;
+
+      return value;
+    }
+
     function setImageBox(name, src, fallbackSrc = "") {
       const image = document.getElementById(`${name}Preview`);
       const placeholder = document.getElementById(`${name}Placeholder`);
       const text = image?.parentElement.querySelector("span");
-      const nextSrc = src || fallbackSrc;
+      const nextSrc = normalizeImageUrl(src || fallbackSrc);
 
       if (!image) return;
+
+      image.onerror = null;
 
       if (!nextSrc) {
         image.removeAttribute("src");
@@ -1212,6 +1230,13 @@
         return;
       }
 
+      image.onerror = () => {
+        image.onerror = null;
+        image.removeAttribute("src");
+        image.hidden = true;
+        if (placeholder) placeholder.hidden = false;
+        if (text) text.hidden = false;
+      };
       image.src = nextSrc;
       image.hidden = false;
       if (placeholder) placeholder.hidden = true;

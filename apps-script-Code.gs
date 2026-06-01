@@ -83,7 +83,7 @@ function saveImageData_(dataUrl, fileNameBase) {
   const blob = Utilities.newBlob(bytes, mimeType, `${fileNameBase}.${extension}`);
   const file = getImageFolder_().createFile(blob);
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return `https://drive.google.com/uc?export=view&id=${file.getId()}`;
+  return `https://drive.google.com/thumbnail?id=${file.getId()}&sz=w1600`;
 }
 
 function normalizeParams_(params) {
