@@ -375,6 +375,10 @@
       font-weight: 900;
     }
 
+    .warn-text {
+      color: var(--danger);
+    }
+
     .value {
       min-width: 0;
       font-size: 17px;
@@ -1082,6 +1086,21 @@
       });
     }
 
+    function setPreviewHtml(name, value) {
+      previews.forEach((preview) => {
+        if (preview.dataset.preview === name) preview.innerHTML = value;
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
     function formatDate(value) {
       if (!value) return "";
       const [year, month, day] = value.split("-");
@@ -1342,9 +1361,15 @@
       return map[value] ?? "선택안함";
     }
 
-    function displayConfigNote(values) {
+    function renderConfigHtml(values) {
+      const configValue = displayConfig(values);
+      const armrestValue = displayArmrest(values.armrest);
       const stoolQty = Math.max(0, Number.parseInt(values.stoolQty, 10) || 0);
-      return stoolQty > 0 ? ` + 스툴 ${stoolQty}개` : "";
+      const stoolText = stoolQty > 0 ? ` + 스툴 ${stoolQty}개` : "";
+      const stoolHtml = stoolQty >= 2 ? `<span class="warn-text">${escapeHtml(stoolText)}</span>` : escapeHtml(stoolText);
+      const mainHtml = `${escapeHtml(configValue)}${stoolHtml}`;
+
+      return armrestValue ? `${mainHtml}<br>(${escapeHtml(armrestValue)})` : mainHtml;
     }
 
     function displayFabric(values) {
@@ -1433,18 +1458,14 @@
 
     function renderDerived() {
       const values = formValues();
-      const configValue = displayConfig(values);
-      const configMain = `${configValue}${displayConfigNote(values)}`;
-      const armrestValue = displayArmrest(values.armrest);
-      const config = configMain && armrestValue ? `${configMain}\n(${armrestValue})` : configMain;
       const qtyNumber = Math.max(1, Number.parseInt(values.qty, 10) || 1);
       const manager = values.managerPhone ? `담당자: ${values.manager}(${values.managerPhone})` : `담당자: ${values.manager}`;
 
       setPreview("orderDateDisplay", formatDate(values.orderDate));
       setPreview("dueDateDisplay", formatDate(values.dueDate));
       setPreview("docNoDisplay", currentDocNo());
-      setPreview("configDisplay", config);
-      setPreview("qtyDisplay", `${qtyNumber} SET`);
+      setPreviewHtml("configDisplay", renderConfigHtml(values));
+      setPreviewHtml("qtyDisplay", qtyNumber >= 2 ? `<span class="warn-text">${qtyNumber} SET</span>` : `${qtyNumber} SET`);
       setPreview("managerDisplay", manager);
       setPreview("fabric", displayFabric(values));
       setPreview("color", displayColor(values));
