@@ -210,6 +210,38 @@
       line-height: 1;
     }
 
+    .choice-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .choice-row input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .choice-row span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      border-radius: 8px;
+      background: #fbfbfd;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .choice-row input:checked + span {
+      border-color: rgba(0, 113, 227, .45);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
     .preview-wrap {
       padding: 28px;
       overflow: auto;
@@ -598,6 +630,10 @@
         grid-template-columns: 52px minmax(0, 1fr) 82px;
       }
 
+      .choice-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       input,
       textarea,
       select {
@@ -743,11 +779,12 @@
         </label>
         <div class="two">
           <label>팔걸이 위치
-            <select data-field="armrest">
-              <option>양쪽 팔걸이</option>
-              <option>앉았을 때 좌측 팔걸이</option>
-              <option>앉았을 때 우측 팔걸이</option>
-            </select>
+            <div class="choice-row">
+              <label><input type="radio" name="armrestChoice" data-field="armrest" value="선택안함"><span>선택안함</span></label>
+              <label><input type="radio" name="armrestChoice" data-field="armrest" value="양쪽"><span>양쪽</span></label>
+              <label><input type="radio" name="armrestChoice" data-field="armrest" value="왼쪽"><span>왼쪽</span></label>
+              <label><input type="radio" name="armrestChoice" data-field="armrest" value="오른쪽"><span>오른쪽</span></label>
+            </div>
           </label>
           <label>수량
             <div class="qty-control">
@@ -964,7 +1001,7 @@
       model: "폰타 (F1-0001)",
       config: "1인 기본형 (F1-0001-S1000)",
       configManual: "",
-      armrest: "양쪽 팔걸이",
+      armrest: "선택안함",
       fabric: "퓨전",
       fabricManual: "",
       color: "그레이지",
@@ -1025,6 +1062,7 @@
 
     function formValues() {
       return Array.from(fields).reduce((values, field) => {
+        if (field.type === "radio" && !field.checked) return values;
         values[field.dataset.field] = field.value;
         return values;
       }, {});
@@ -1261,7 +1299,37 @@
     }
 
     function displayConfig(values) {
-      return values.config === "직접입력" ? values.configManual : values.config;
+      const config = values.config === "직접입력" ? values.configManual : values.config;
+      return String(config || "").replace(/\s*\([^)]*\)\s*$/, "");
+    }
+
+    function displayArmrest(value) {
+      const map = {
+        "선택안함": "",
+        "양쪽": "양쪽 팔걸이",
+        "왼쪽": "왼쪽 팔걸이",
+        "오른쪽": "오른쪽 팔걸이",
+        "양쪽 팔걸이": "양쪽 팔걸이",
+        "앉았을 때 좌측 팔걸이": "왼쪽 팔걸이",
+        "앉았을 때 우측 팔걸이": "오른쪽 팔걸이"
+      };
+      return map[value] ?? value ?? "";
+    }
+
+    function normalizeArmrestInput(value) {
+      const map = {
+        "": "선택안함",
+        "선택안함": "선택안함",
+        "양쪽": "양쪽",
+        "왼쪽": "왼쪽",
+        "오른쪽": "오른쪽",
+        "양쪽 팔걸이": "양쪽",
+        "앉았을 때 좌측 팔걸이": "왼쪽",
+        "앉았을 때 우측 팔걸이": "오른쪽",
+        "왼쪽 팔걸이": "왼쪽",
+        "오른쪽 팔걸이": "오른쪽"
+      };
+      return map[value] ?? "선택안함";
     }
 
     function displayFabric(values) {
@@ -1351,7 +1419,8 @@
     function renderDerived() {
       const values = formValues();
       const configValue = displayConfig(values);
-      const config = configValue && values.armrest ? `${configValue}\n(${values.armrest})` : configValue;
+      const armrestValue = displayArmrest(values.armrest);
+      const config = configValue && armrestValue ? `${configValue}\n(${armrestValue})` : configValue;
       const qtyNumber = Math.max(1, Number.parseInt(values.qty, 10) || 1);
       const manager = values.managerPhone ? `담당자: ${values.manager}(${values.managerPhone})` : `담당자: ${values.manager}`;
 
@@ -1384,7 +1453,12 @@
         if (target) target.dataset.manualUpload = "false";
       });
       fields.forEach((field) => {
-        field.value = values[field.dataset.field] ?? defaults[field.dataset.field] ?? "";
+        const nextValue = values[field.dataset.field] ?? defaults[field.dataset.field] ?? "";
+        if (field.type === "radio") {
+          field.checked = field.value === normalizeArmrestInput(nextValue);
+          return;
+        }
+        field.value = nextValue;
         syncField(field.dataset.field, field.value);
       });
       renderDerived();
