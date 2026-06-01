@@ -738,7 +738,8 @@
           </label>
         </div>
         <label>구성
-          <input data-field="config" placeholder="2,100mm 라운지형">
+          <select data-field="config" id="configSelect"></select>
+          <input class="manual-input" data-field="configManual" id="configManual" placeholder="2,100mm 라운지형">
         </label>
         <div class="two">
           <label>팔걸이 위치
@@ -930,6 +931,28 @@
       }
     };
 
+    const configCatalog = [
+      { code: "F1-0001-S1000", name: "1인 기본형" },
+      { code: "F1-0001-S1600", name: "1,600 기본형" },
+      { code: "F1-0001-S1600", name: "1,600 라운지형", imageKey: "F1-0001-S1600-lounge" },
+      { code: "F1-0001-S1800", name: "1,800 기본형" },
+      { code: "F1-0001-S1800", name: "1,800 라운지형", imageKey: "F1-0001-S1800-lounge" },
+      { code: "F1-0001-S2000", name: "2,000 기본형" },
+      { code: "F1-0001-S2000", name: "2,000 라운지형", imageKey: "F1-0001-S2000-lounge" },
+      { code: "F1-0001-AA", name: "3인 기본형" },
+      { code: "F1-0001-AL", name: "3인 라운지형" },
+      { code: "F1-0001-AMA", name: "4인 기본형" },
+      { code: "F1-0001-AML", name: "4인 라운지형" },
+      { code: "F1-0001-ACA", name: "3인 코너 기본형" },
+      { code: "F1-0001-ACL", name: "3인 코너 라운지형" },
+      { code: "F1-0001-AMCA", name: "4인 코너 기본형" },
+      { code: "F1-0001-AMCL", name: "4인 코너 라운지형" }
+    ].map((item) => ({
+      ...item,
+      label: `${item.name} (${item.code})`,
+      image: `assets/configs/${item.imageKey || item.code}.jpg`
+    }));
+
     const sample = {
       orderDate: "",
       dueDate: "",
@@ -939,7 +962,8 @@
       managerPhone: "010-4784-9909",
       brand: "소프트브릭",
       model: "폰타 (F1-0001)",
-      config: "",
+      config: "1인 기본형 (F1-0001-S1000)",
+      configManual: "",
       armrest: "양쪽 팔걸이",
       fabric: "퓨전",
       fabricManual: "",
@@ -969,6 +993,8 @@
     const storageKey = "sofa-work-order-prototype-v3";
     const fabricSelect = document.getElementById("fabricSelect");
     const colorSelect = document.getElementById("colorSelect");
+    const configSelect = document.getElementById("configSelect");
+    const configManual = document.getElementById("configManual");
     const fabricManual = document.getElementById("fabricManual");
     const colorManual = document.getElementById("colorManual");
     const sheetApiUrl = document.getElementById("sheetApiUrl");
@@ -1202,6 +1228,16 @@
       return true;
     }
 
+    function populateConfigOptions(selectedConfig = defaultValues().config) {
+      configSelect.innerHTML = configCatalog.map((item) => (
+        `<option value="${item.label}">${item.label}</option>`
+      )).join("") + '<option value="직접입력">직접입력</option>';
+
+      const labels = configCatalog.map((item) => item.label);
+      configSelect.value = labels.includes(selectedConfig) || selectedConfig === "직접입력" ? selectedConfig : labels[0];
+      updateManualInputs();
+    }
+
     function populateFabricOptions(selectedFabric = defaultValues().fabric, selectedColor = defaultValues().color) {
       fabricSelect.innerHTML = Object.keys(fabricCatalog).map((fabric) => (
         `<option value="${fabric}">${fabric}</option>`
@@ -1219,8 +1255,13 @@
     }
 
     function updateManualInputs() {
+      configManual.classList.toggle("active", configSelect.value === "직접입력");
       fabricManual.classList.toggle("active", fabricSelect.value === "직접입력");
       colorManual.classList.toggle("active", colorSelect.value === "직접입력");
+    }
+
+    function displayConfig(values) {
+      return values.config === "직접입력" ? values.configManual : values.config;
     }
 
     function displayFabric(values) {
@@ -1291,7 +1332,8 @@
       const image = document.getElementById("productImagePreview");
 
       if (!image || image.dataset.manualUpload === "true") return;
-      setImageBox("productImage", values.productImageUrl);
+      const configImage = configCatalog.find((item) => item.label === values.config)?.image || "";
+      setImageBox("productImage", values.productImageUrl || configImage);
     }
 
     function updateOptionImages() {
@@ -1308,7 +1350,8 @@
 
     function renderDerived() {
       const values = formValues();
-      const config = values.config && values.armrest ? `${values.config}\n(${values.armrest})` : values.config;
+      const configValue = displayConfig(values);
+      const config = configValue && values.armrest ? `${configValue}\n(${values.armrest})` : configValue;
       const qtyNumber = Math.max(1, Number.parseInt(values.qty, 10) || 1);
       const manager = values.managerPhone ? `담당자: ${values.manager}(${values.managerPhone})` : `담당자: ${values.manager}`;
 
@@ -1334,6 +1377,7 @@
 
     function writeForm(values) {
       const defaults = defaultValues();
+      populateConfigOptions(values.config ?? defaults.config);
       populateFabricOptions(values.fabric ?? defaults.fabric, values.color ?? defaults.color);
       document.querySelectorAll("[data-image]").forEach((input) => {
         const target = document.getElementById(`${input.dataset.image}Preview`);
@@ -1358,6 +1402,10 @@
         syncField(field.dataset.field, field.value);
       });
       field.addEventListener("change", () => {
+        if (field.dataset.field === "config") {
+          const productImage = document.getElementById("productImagePreview");
+          if (productImage && !formValues().productImageUrl) productImage.dataset.manualUpload = "false";
+        }
         if (field.dataset.field === "fabric") {
           populateColorOptions();
         }

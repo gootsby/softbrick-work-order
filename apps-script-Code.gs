@@ -14,6 +14,7 @@ const HEADERS = [
   "brand",
   "model",
   "config",
+  "configManual",
   "armrest",
   "fabric",
   "fabricManual",
