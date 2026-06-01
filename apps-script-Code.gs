@@ -1,5 +1,6 @@
 const SPREADSHEET_ID = ""; // Standalone script로 쓸 경우 시트 ID를 넣으세요. 시트에 묶인 스크립트면 비워둡니다.
 const SHEET_NAME = "작업지시서";
+const IMAGE_FOLDER_NAME = "작업지시서_소프트브릭_이미지";
 
 const HEADERS = [
   "docNo",
@@ -24,7 +25,10 @@ const HEADERS = [
   "address",
   "memo",
   "option2Text",
-  "productImageUrl"
+  "productImageUrl",
+  "fabricImageUrl",
+  "option1ImageUrl",
+  "option2ImageUrl"
 ];
 
 function getSpreadsheet_() {
@@ -54,7 +58,56 @@ function rowToObject_(headers, row) {
   }, {});
 }
 
+function getImageFolder_() {
+  const folders = DriveApp.getFoldersByName(IMAGE_FOLDER_NAME);
+  return folders.hasNext() ? folders.next() : DriveApp.createFolder(IMAGE_FOLDER_NAME);
+}
+
+function imageExtension_(mimeType) {
+  const map = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif"
+  };
+  return map[mimeType] || "png";
+}
+
+function saveImageData_(dataUrl, fileNameBase) {
+  const match = String(dataUrl || "").match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return "";
+
+  const mimeType = match[1];
+  const bytes = Utilities.base64Decode(match[2]);
+  const extension = imageExtension_(mimeType);
+  const blob = Utilities.newBlob(bytes, mimeType, `${fileNameBase}.${extension}`);
+  const file = getImageFolder_().createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return `https://drive.google.com/uc?export=view&id=${file.getId()}`;
+}
+
+function normalizeParams_(params) {
+  const next = Object.assign({}, params);
+  const docNo = String(next.docNo || "work-order").replace(/[^\w가-힣-]+/g, "_");
+  const imageFields = [
+    ["productImageData", "productImageUrl", "product"],
+    ["fabricImageData", "fabricImageUrl", "fabric"],
+    ["option1ImageData", "option1ImageUrl", "label"],
+    ["option2ImageData", "option2ImageUrl", "etc"]
+  ];
+
+  imageFields.forEach(([dataKey, urlKey, label]) => {
+    if (next[dataKey]) {
+      next[urlKey] = saveImageData_(next[dataKey], `${docNo}_${label}_${Date.now()}`);
+    }
+    delete next[dataKey];
+  });
+
+  return next;
+}
+
 function saveRecord_(params) {
+  params = normalizeParams_(params);
   const sheet = getSheet_();
   const values = sheet.getDataRange().getValues();
   const headers = values[0] || HEADERS;

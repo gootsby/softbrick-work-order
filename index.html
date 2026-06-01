@@ -768,12 +768,15 @@
         </label>
         <label>원단/색상 이미지 직접 업로드
           <input type="file" accept="image/*" data-image="fabricImage">
+          <input type="hidden" data-field="fabricImageUrl">
         </label>
         <label>라벨 이미지
           <input type="file" accept="image/*" data-image="option1Image">
+          <input type="hidden" data-field="option1ImageUrl">
         </label>
         <label>기타 이미지
           <input type="file" accept="image/*" data-image="option2Image">
+          <input type="hidden" data-field="option2ImageUrl">
         </label>
       </section>
     </aside>
@@ -916,6 +919,9 @@
       option1Text: "",
       option2Text: "",
       productImageUrl: "",
+      fabricImageUrl: "",
+      option1ImageUrl: "",
+      option2ImageUrl: "",
       sheetApiUrl: ""
     };
 
@@ -931,6 +937,13 @@
     const fabricManual = document.getElementById("fabricManual");
     const colorManual = document.getElementById("colorManual");
     const sheetApiUrl = document.getElementById("sheetApiUrl");
+    const imageUploads = {};
+    const imageUrlFieldByUpload = {
+      productImage: "productImageUrl",
+      fabricImage: "fabricImageUrl",
+      option1Image: "option1ImageUrl",
+      option2Image: "option2ImageUrl"
+    };
 
     function dateOffset(days = 0) {
       const date = new Date();
@@ -981,10 +994,14 @@
     }
 
     function cloudPayload() {
-      return {
+      const payload = {
         ...formValues(),
         docNo: currentDocNo()
       };
+      Object.entries(imageUploads).forEach(([name, value]) => {
+        if (value) payload[`${name}Data`] = value;
+      });
+      return payload;
     }
 
     function scriptGet(url, params) {
@@ -1010,11 +1027,85 @@
       });
     }
 
+    function scriptPost(url, params) {
+      return new Promise((resolve, reject) => {
+        const frameName = `sheetPostFrame_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        const iframe = document.createElement("iframe");
+        const form = document.createElement("form");
+        let submitted = false;
+        let settled = false;
+
+        const cleanup = () => {
+          clearTimeout(timer);
+          form.remove();
+          iframe.remove();
+        };
+
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(new Error("Google Sheets 저장 응답 시간이 초과되었습니다."));
+        }, 45000);
+
+        iframe.name = frameName;
+        iframe.hidden = true;
+        iframe.addEventListener("load", () => {
+          if (!submitted || settled) return;
+          settled = true;
+          setTimeout(() => {
+            cleanup();
+            resolve();
+          }, 300);
+        });
+
+        form.method = "POST";
+        form.action = url;
+        form.target = frameName;
+        form.style.display = "none";
+        form.acceptCharset = "UTF-8";
+
+        Object.entries(params).forEach(([name, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = value ?? "";
+          form.appendChild(input);
+        });
+
+        document.body.append(iframe, form);
+        submitted = true;
+        form.submit();
+      });
+    }
+
+    function hasImageUpload(payload) {
+      return Object.keys(payload).some((key) => key.endsWith("Data") && payload[key]);
+    }
+
+    function clearImageUploads() {
+      Object.keys(imageUploads).forEach((key) => delete imageUploads[key]);
+      document.querySelectorAll("[data-image]").forEach((input) => {
+        input.value = "";
+      });
+    }
+
     async function saveToSheet() {
       const url = sheetApiUrl.value.trim();
       if (!url) return false;
 
-      const data = await scriptGet(url, { action: "save", ...cloudPayload() });
+      const payload = { action: "save", ...cloudPayload() };
+      if (hasImageUpload(payload)) {
+        await scriptPost(url, payload);
+        const saved = await scriptGet(url, { action: "load", docNo: payload.docNo });
+        if (!saved.ok || !saved.record) throw new Error("저장 후 시트에서 문서를 확인하지 못했습니다.");
+        clearImageUploads();
+        writeForm({ ...saved.record, sheetApiUrl: url });
+        localStorage.setItem(`${storageKey}:sheetApiUrl`, url);
+        return true;
+      }
+
+      const data = await scriptGet(url, payload);
       if (!data.ok) throw new Error(data.error || "Google Sheets 저장에 실패했습니다.");
       localStorage.setItem(`${storageKey}:sheetApiUrl`, url);
       return true;
@@ -1064,43 +1155,54 @@
       return values.color === "직접입력" ? values.colorManual : values.color;
     }
 
-    function updateFabricImage() {
-      const values = formValues();
-      const imagePath = fabricCatalog[values.fabric]?.colors?.[values.color];
-      const image = document.getElementById("fabricImagePreview");
+    function setImageBox(name, src, fallbackSrc = "") {
+      const image = document.getElementById(`${name}Preview`);
+      const placeholder = document.getElementById(`${name}Placeholder`);
       const text = image?.parentElement.querySelector("span");
+      const nextSrc = src || fallbackSrc;
 
       if (!image) return;
 
-      if (!imagePath) {
+      if (!nextSrc) {
         image.removeAttribute("src");
         image.hidden = true;
+        if (placeholder) placeholder.hidden = false;
         if (text) text.hidden = false;
         return;
       }
 
-      image.src = imagePath;
+      image.src = nextSrc;
       image.hidden = false;
+      if (placeholder) placeholder.hidden = true;
       if (text) text.hidden = true;
+    }
+
+    function updateFabricImage() {
+      const values = formValues();
+      const image = document.getElementById("fabricImagePreview");
+      if (image?.dataset.manualUpload === "true") return;
+      const imagePath = values.fabricImageUrl || fabricCatalog[values.fabric]?.colors?.[values.color];
+      setImageBox("fabricImage", imagePath);
     }
 
     function updateProductImageFromUrl() {
       const values = formValues();
       const image = document.getElementById("productImagePreview");
-      const placeholder = document.getElementById("productImagePlaceholder");
 
       if (!image || image.dataset.manualUpload === "true") return;
+      setImageBox("productImage", values.productImageUrl);
+    }
 
-      if (!values.productImageUrl) {
-        image.removeAttribute("src");
-        image.hidden = true;
-        if (placeholder) placeholder.hidden = false;
-        return;
+    function updateOptionImages() {
+      const values = formValues();
+      const option1Image = document.getElementById("option1ImagePreview");
+      const option2Image = document.getElementById("option2ImagePreview");
+      if (option1Image?.dataset.manualUpload !== "true") {
+        setImageBox("option1Image", values.option1ImageUrl, "assets/label-softbrick.JPEG");
       }
-
-      image.src = values.productImageUrl;
-      image.hidden = false;
-      if (placeholder) placeholder.hidden = true;
+      if (option2Image?.dataset.manualUpload !== "true") {
+        setImageBox("option2Image", values.option2ImageUrl);
+      }
     }
 
     function renderDerived() {
@@ -1119,6 +1221,7 @@
       setPreview("color", displayColor(values));
       updateFabricImage();
       updateProductImageFromUrl();
+      updateOptionImages();
     }
 
     function syncField(name, value) {
@@ -1131,6 +1234,10 @@
     function writeForm(values) {
       const defaults = defaultValues();
       populateFabricOptions(values.fabric ?? defaults.fabric, values.color ?? defaults.color);
+      document.querySelectorAll("[data-image]").forEach((input) => {
+        const target = document.getElementById(`${input.dataset.image}Preview`);
+        if (target) target.dataset.manualUpload = "false";
+      });
       fields.forEach((field) => {
         field.value = values[field.dataset.field] ?? defaults[field.dataset.field] ?? "";
         syncField(field.dataset.field, field.value);
@@ -1175,11 +1282,10 @@
         const file = input.files && input.files[0];
 
         if (!file || !target) {
+          delete imageUploads[input.dataset.image];
           if (target) {
             target.removeAttribute("src");
-            if (input.dataset.image === "productImage") {
-              target.dataset.manualUpload = "false";
-            }
+            target.dataset.manualUpload = "false";
             target.hidden = true;
           }
           if (placeholder) placeholder.hidden = false;
@@ -1190,9 +1296,13 @@
         const reader = new FileReader();
         reader.onload = () => {
           target.src = reader.result;
-          if (input.dataset.image === "productImage") {
-            target.dataset.manualUpload = "true";
+          imageUploads[input.dataset.image] = reader.result;
+          const urlFieldName = imageUrlFieldByUpload[input.dataset.image];
+          const urlField = urlFieldName ? document.querySelector(`[data-field="${urlFieldName}"]`) : null;
+          if (urlField) {
+            urlField.value = "";
           }
+          target.dataset.manualUpload = "true";
           target.hidden = false;
           if (placeholder) placeholder.hidden = true;
           if (siblingText) siblingText.hidden = true;
