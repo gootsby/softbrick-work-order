@@ -144,8 +144,25 @@ function json_(payload, callback) {
 function postMessage_(payload) {
   const text = JSON.stringify(payload).replace(/</g, "\\u003c");
   return HtmlService.createHtmlOutput(
-    `<script>window.parent.postMessage(${text}, "*");</script>`
+    `<script>
+      (function () {
+        var payload = ${text};
+        function send() {
+          try { window.parent.postMessage(payload, "*"); } catch (e) {}
+          try { window.top.postMessage(payload, "*"); } catch (e) {}
+          try { if (window.opener) window.opener.postMessage(payload, "*"); } catch (e) {}
+        }
+        send();
+        setTimeout(send, 300);
+        setTimeout(send, 1000);
+      })();
+    </script>`
   );
+}
+
+function authorizeOnce() {
+  getSheet_();
+  getImageFolder_();
 }
 
 function doGet(e) {

@@ -1059,8 +1059,8 @@
           if (settled) return;
           settled = true;
           cleanup();
-          reject(new Error("Google Sheets 저장 응답 시간이 초과되었습니다."));
-        }, 45000);
+          reject(new Error("Google Sheets 저장 응답 시간이 초과되었습니다. Apps Script에서 authorizeOnce를 한 번 실행해 권한을 승인한 뒤 다시 시도해 주세요."));
+        }, 120000);
 
         iframe.name = frameName;
         iframe.hidden = true;
@@ -1084,6 +1084,38 @@
         window.addEventListener("message", handleMessage);
         document.body.append(iframe, form);
         form.submit();
+      });
+    }
+
+    function resizeImageFile(file, maxSize = 1600, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const source = reader.result;
+          const image = new Image();
+
+          image.onload = () => {
+            const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+            if (scale >= 1 && file.size <= 900000) {
+              resolve(source);
+              return;
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            const context = canvas.getContext("2d");
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+
+          image.onerror = () => reject(new Error("이미지 파일을 읽지 못했습니다."));
+          image.src = source;
+        };
+
+        reader.onerror = () => reject(new Error("이미지 파일을 읽지 못했습니다."));
+        reader.readAsDataURL(file);
       });
     }
 
@@ -1302,10 +1334,9 @@
           return;
         }
 
-        const reader = new FileReader();
-        reader.onload = () => {
-          target.src = reader.result;
-          imageUploads[input.dataset.image] = reader.result;
+        resizeImageFile(file).then((imageData) => {
+          target.src = imageData;
+          imageUploads[input.dataset.image] = imageData;
           const urlFieldName = imageUrlFieldByUpload[input.dataset.image];
           const urlField = urlFieldName ? document.querySelector(`[data-field="${urlFieldName}"]`) : null;
           if (urlField) {
@@ -1315,8 +1346,9 @@
           target.hidden = false;
           if (placeholder) placeholder.hidden = true;
           if (siblingText) siblingText.hidden = true;
-        };
-        reader.readAsDataURL(file);
+        }).catch((error) => {
+          alert(error.message);
+        });
       });
     });
 
