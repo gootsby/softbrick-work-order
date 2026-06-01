@@ -9,6 +9,8 @@
       --ink: #1d1d1f;
       --muted: #6e6e73;
       --line: #d2d2d7;
+      --print-line: #8f8f94;
+      --print-border: #7d7d83;
       --soft: #f5f5f7;
       --paper: #fff;
       --accent: #0071e3;
@@ -613,6 +615,10 @@
         margin: 0;
       }
 
+      :root {
+        --line: var(--print-line);
+      }
+
       body {
         background: #fff;
       }
@@ -635,6 +641,35 @@
         height: 210mm;
         margin: 0;
         box-shadow: none;
+        border-radius: 0;
+      }
+
+      .date-card,
+      .summary-card,
+      .customer-strip,
+      .product-panel,
+      .side-panel,
+      .memo-panel,
+      .check-panel {
+        border-color: var(--print-border);
+      }
+
+      .sheet-header,
+      .date-card div:nth-child(1),
+      .date-card div:nth-child(2),
+      .date-card div:nth-child(1),
+      .date-card div:nth-child(3),
+      .strip-label,
+      .strip-value,
+      .panel-head,
+      .sample,
+      .sample-title,
+      .check-item {
+        border-color: var(--line);
+      }
+
+      .box {
+        border-color: #111;
       }
     }
   </style>
