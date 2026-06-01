@@ -1343,14 +1343,8 @@
     }
 
     function displayConfigNote(values) {
-      const parts = [];
-      const armrestValue = displayArmrest(values.armrest);
       const stoolQty = Math.max(0, Number.parseInt(values.stoolQty, 10) || 0);
-
-      if (armrestValue) parts.push(armrestValue);
-      if (stoolQty > 0) parts.push(`스툴 ${stoolQty}개`);
-
-      return parts.join(" + ");
+      return stoolQty > 0 ? ` + 스툴 ${stoolQty}개` : "";
     }
 
     function displayFabric(values) {
@@ -1440,8 +1434,9 @@
     function renderDerived() {
       const values = formValues();
       const configValue = displayConfig(values);
-      const configNote = displayConfigNote(values);
-      const config = configValue && configNote ? `${configValue}\n(${configNote})` : configValue;
+      const configMain = `${configValue}${displayConfigNote(values)}`;
+      const armrestValue = displayArmrest(values.armrest);
+      const config = configMain && armrestValue ? `${configMain}\n(${armrestValue})` : configMain;
       const qtyNumber = Math.max(1, Number.parseInt(values.qty, 10) || 1);
       const manager = values.managerPhone ? `담당자: ${values.manager}(${values.managerPhone})` : `담당자: ${values.manager}`;
 
