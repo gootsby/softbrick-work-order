@@ -760,6 +760,9 @@
         <label>제품 이미지
           <input type="file" accept="image/*" data-image="productImage">
         </label>
+        <label>제품 이미지 링크
+          <input type="url" data-field="productImageUrl" placeholder="https://example.com/sofa.jpg">
+        </label>
         <label>원단/색상 이미지 직접 업로드
           <input type="file" accept="image/*" data-image="fabricImage">
         </label>
@@ -908,7 +911,8 @@
       memo: "",
       fabricMemo: "",
       option1Text: "",
-      option2Text: ""
+      option2Text: "",
+      productImageUrl: ""
     };
 
     const fields = document.querySelectorAll("[data-field]");
@@ -1020,6 +1024,25 @@
       if (text) text.hidden = true;
     }
 
+    function updateProductImageFromUrl() {
+      const values = formValues();
+      const image = document.getElementById("productImagePreview");
+      const placeholder = document.getElementById("productImagePlaceholder");
+
+      if (!image || image.dataset.manualUpload === "true") return;
+
+      if (!values.productImageUrl) {
+        image.removeAttribute("src");
+        image.hidden = true;
+        if (placeholder) placeholder.hidden = false;
+        return;
+      }
+
+      image.src = values.productImageUrl;
+      image.hidden = false;
+      if (placeholder) placeholder.hidden = true;
+    }
+
     function renderDerived() {
       const values = formValues();
       const config = values.config && values.armrest ? `${values.config}\n(${values.armrest})` : values.config;
@@ -1035,6 +1058,7 @@
       setPreview("fabric", displayFabric(values));
       setPreview("color", displayColor(values));
       updateFabricImage();
+      updateProductImageFromUrl();
     }
 
     function syncField(name, value) {
@@ -1058,6 +1082,10 @@
       field.addEventListener("input", () => {
         if (field.dataset.field === "qty") {
           field.value = Math.max(1, Number.parseInt(field.value, 10) || 1);
+        }
+        if (field.dataset.field === "productImageUrl") {
+          const productImage = document.getElementById("productImagePreview");
+          if (productImage) productImage.dataset.manualUpload = "false";
         }
         syncField(field.dataset.field, field.value);
       });
@@ -1089,6 +1117,9 @@
         if (!file || !target) {
           if (target) {
             target.removeAttribute("src");
+            if (input.dataset.image === "productImage") {
+              target.dataset.manualUpload = "false";
+            }
             target.hidden = true;
           }
           if (placeholder) placeholder.hidden = false;
@@ -1099,6 +1130,9 @@
         const reader = new FileReader();
         reader.onload = () => {
           target.src = reader.result;
+          if (input.dataset.image === "productImage") {
+            target.dataset.manualUpload = "true";
+          }
           target.hidden = false;
           if (placeholder) placeholder.hidden = true;
           if (siblingText) siblingText.hidden = true;
