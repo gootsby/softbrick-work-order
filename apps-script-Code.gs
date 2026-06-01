@@ -187,6 +187,16 @@ function doGet(e) {
     return json_({ ok: Boolean(row), record: row ? rowToObject_(headers, row) : null }, callback);
   }
 
+  if (action === "nextSeq") {
+    const quarter = params.docQuarter || "1";
+    const pattern = new RegExp(`^SB-${quarter}Q-(\\d+)$`);
+    const maxSeq = values.slice(1).reduce((max, row) => {
+      const match = String(row[docNoIndex] || "").match(pattern);
+      return match ? Math.max(max, Number(match[1]) || 0) : max;
+    }, 0);
+    return json_({ ok: true, docQuarter: quarter, docSeq: String(maxSeq + 1) }, callback);
+  }
+
   if (action === "save") {
     return json_(saveRecord_(params), callback);
   }

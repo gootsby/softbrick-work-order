@@ -1298,6 +1298,20 @@
       return true;
     }
 
+    async function applyNextDocSeq() {
+      const url = sheetApiUrl.value.trim();
+      if (!url) return false;
+
+      const values = formValues();
+      const data = await scriptGet(url, { action: "nextSeq", docQuarter: values.docQuarter || currentQuarter() });
+      if (!data.ok) throw new Error(data.error || "다음 문서번호를 불러오지 못했습니다.");
+
+      const seqField = document.querySelector('[data-field="docSeq"]');
+      seqField.value = data.docSeq || "1";
+      syncField("docSeq", seqField.value);
+      return true;
+    }
+
     function populateConfigOptions(selectedConfig = defaultValues().config) {
       configSelect.innerHTML = configCatalog.map((item) => (
         `<option value="${item.label}">${item.label}</option>`
@@ -1530,6 +1544,9 @@
         }
         updateManualInputs();
         syncField(field.dataset.field, field.value);
+        if (field.dataset.field === "docQuarter") {
+          applyNextDocSeq().catch(() => {});
+        }
       });
     });
 
@@ -1612,7 +1629,10 @@
       if (saved) writeForm(JSON.parse(saved));
     });
 
-    resetBtn.addEventListener("click", () => writeForm(defaultValues()));
+    resetBtn.addEventListener("click", () => {
+      writeForm(defaultValues());
+      applyNextDocSeq().catch(() => {});
+    });
 
     printBtn.addEventListener("click", () => {
       const previousTitle = document.title;
@@ -1628,6 +1648,7 @@
     if (savedSheetUrl) {
       sheetApiUrl.value = savedSheetUrl;
       syncField("sheetApiUrl", savedSheetUrl);
+      applyNextDocSeq().catch(() => {});
     }
     renderDerived();
   </script>
