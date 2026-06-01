@@ -54,6 +54,32 @@ function rowToObject_(headers, row) {
   }, {});
 }
 
+function saveRecord_(params) {
+  const sheet = getSheet_();
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0] || HEADERS;
+  const docNo = params.docNo || "";
+  const docNoIndex = headers.indexOf("docNo");
+
+  if (!docNo) {
+    return { ok: false, error: "docNo is required" };
+  }
+
+  const nextRow = headers.map(header => {
+    if (header === "updatedAt") return new Date();
+    return params[header] || "";
+  });
+
+  const existingOffset = values.slice(1).findIndex(row => row[docNoIndex] === docNo);
+  if (existingOffset >= 0) {
+    sheet.getRange(existingOffset + 2, 1, 1, headers.length).setValues([nextRow]);
+    return { ok: true, docNo, mode: "updated" };
+  }
+
+  sheet.appendRow(nextRow);
+  return { ok: true, docNo, mode: "created" };
+}
+
 function json_(payload, callback) {
   const text = JSON.stringify(payload);
   const output = callback ? `${callback}(${text});` : text;
@@ -82,32 +108,14 @@ function doGet(e) {
     return json_({ ok: Boolean(row), record: row ? rowToObject_(headers, row) : null }, callback);
   }
 
+  if (action === "save") {
+    return json_(saveRecord_(params), callback);
+  }
+
   return json_({ ok: false, error: "Unknown action" }, callback);
 }
 
 function doPost(e) {
   const params = e.parameter || {};
-  const sheet = getSheet_();
-  const values = sheet.getDataRange().getValues();
-  const headers = values[0] || HEADERS;
-  const docNo = params.docNo || "";
-  const docNoIndex = headers.indexOf("docNo");
-
-  if (!docNo) {
-    return json_({ ok: false, error: "docNo is required" });
-  }
-
-  const nextRow = headers.map(header => {
-    if (header === "updatedAt") return new Date();
-    return params[header] || "";
-  });
-
-  const existingOffset = values.slice(1).findIndex(row => row[docNoIndex] === docNo);
-  if (existingOffset >= 0) {
-    sheet.getRange(existingOffset + 2, 1, 1, headers.length).setValues([nextRow]);
-  } else {
-    sheet.appendRow(nextRow);
-  }
-
-  return json_({ ok: true, docNo });
+  return json_(saveRecord_(params));
 }
