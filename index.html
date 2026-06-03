@@ -474,12 +474,18 @@
     }
 
     .product-stage img {
-      width: 100%;
+      width: auto;
       height: 100%;
-      object-fit: cover;
+      max-width: 100%;
+      object-fit: contain;
       object-position: center;
       display: block;
-      transform: scale(1.02);
+    }
+
+    .product-stage img.fill {
+      width: 100%;
+      max-width: none;
+      object-fit: cover;
     }
 
     .image-placeholder {
@@ -1459,6 +1465,7 @@
       const image = document.getElementById("productImagePreview");
 
       if (!image || image.dataset.manualUpload === "true") return;
+      image.classList.toggle("fill", Boolean(values.productImageUrl));
       const configImage = configCatalog.find((item) => item.label === values.config)?.image || "";
       setImageBox("productImage", values.productImageUrl || configImage);
     }
@@ -1506,7 +1513,10 @@
       populateFabricOptions(values.fabric ?? defaults.fabric, values.color ?? defaults.color);
       document.querySelectorAll("[data-image]").forEach((input) => {
         const target = document.getElementById(`${input.dataset.image}Preview`);
-        if (target) target.dataset.manualUpload = "false";
+        if (target) {
+          target.dataset.manualUpload = "false";
+          if (input.dataset.image === "productImage") target.classList.remove("fill");
+        }
       });
       fields.forEach((field) => {
         const nextValue = values[field.dataset.field] ?? defaults[field.dataset.field] ?? "";
@@ -1573,6 +1583,7 @@
           if (target) {
             target.removeAttribute("src");
             target.dataset.manualUpload = "false";
+            if (input.dataset.image === "productImage") target.classList.remove("fill");
             target.hidden = true;
           }
           if (placeholder) placeholder.hidden = false;
@@ -1589,6 +1600,7 @@
             urlField.value = "";
           }
           target.dataset.manualUpload = "true";
+          target.classList.toggle("fill", input.dataset.image === "productImage");
           target.hidden = false;
           if (placeholder) placeholder.hidden = true;
           if (siblingText) siblingText.hidden = true;
