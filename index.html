@@ -242,6 +242,11 @@
       color: var(--accent);
     }
 
+    .choice-row input:disabled + span {
+      opacity: .38;
+      cursor: not-allowed;
+    }
+
     .preview-wrap {
       padding: 28px;
       overflow: auto;
@@ -1018,7 +1023,7 @@
       model: "폰타 (F1-0001)",
       config: "1인 기본형 (F1-0001-S1000)",
       configManual: "",
-      armrest: "선택안함",
+      armrest: "양쪽",
       fabric: "퓨전",
       fabricManual: "",
       color: "그레이지",
@@ -1344,6 +1349,42 @@
       updateManualInputs();
     }
 
+    function currentConfigItem() {
+      return configCatalog.find((item) => item.label === configSelect.value) || null;
+    }
+
+    function configKind() {
+      if (configSelect.value === "직접입력") return "manual";
+      const item = currentConfigItem();
+      if (!item) return "manual";
+      return item.name.includes("라운지형") ? "lounge" : "basic";
+    }
+
+    function setArmrestValue(value) {
+      document.querySelectorAll('[data-field="armrest"]').forEach((field) => {
+        field.checked = field.value === value;
+      });
+    }
+
+    function updateArmrestOptions(forceDefault = false) {
+      const kind = configKind();
+      const allowed = {
+        basic: ["양쪽"],
+        lounge: ["왼쪽", "오른쪽"],
+        manual: ["선택안함", "양쪽", "왼쪽", "오른쪽"]
+      }[kind];
+      const defaultValue = kind === "lounge" ? "오른쪽" : kind === "basic" ? "양쪽" : "선택안함";
+      const currentValue = normalizeArmrestInput(formValues().armrest);
+
+      document.querySelectorAll('[data-field="armrest"]').forEach((field) => {
+        field.disabled = !allowed.includes(field.value);
+      });
+
+      if (forceDefault || !allowed.includes(currentValue)) {
+        setArmrestValue(defaultValue);
+      }
+    }
+
     function updateManualInputs() {
       configManual.classList.toggle("active", configSelect.value === "직접입력");
       fabricManual.classList.toggle("active", fabricSelect.value === "직접입력");
@@ -1536,6 +1577,7 @@
         field.value = nextValue;
         syncField(field.dataset.field, field.value);
       });
+      updateArmrestOptions();
       renderDerived();
     }
 
@@ -1557,6 +1599,7 @@
         if (field.dataset.field === "config") {
           const productImage = document.getElementById("productImagePreview");
           if (productImage && !formValues().productImageUrl) productImage.dataset.manualUpload = "false";
+          updateArmrestOptions(true);
         }
         if (field.dataset.field === "fabric") {
           populateColorOptions();
