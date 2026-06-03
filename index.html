@@ -1432,7 +1432,7 @@
       const armrestValue = displayArmrest(values.armrest);
       const stoolQty = Math.max(0, Number.parseInt(values.stoolQty, 10) || 0);
       const stoolText = stoolQty > 0 ? ` + 스툴 ${stoolQty}개` : "";
-      const stoolHtml = stoolQty >= 2 ? `<span class="warn-text">${escapeHtml(stoolText)}</span>` : escapeHtml(stoolText);
+      const stoolHtml = stoolQty >= 1 ? `<span class="warn-text">${escapeHtml(stoolText)}</span>` : escapeHtml(stoolText);
       const mainHtml = `${escapeHtml(configValue)}${stoolHtml}`;
 
       return armrestValue ? `${mainHtml}<br>(${escapeHtml(armrestValue)})` : mainHtml;
