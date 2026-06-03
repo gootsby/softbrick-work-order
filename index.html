@@ -1426,6 +1426,7 @@
       const placeholder = document.getElementById(`${name}Placeholder`);
       const text = image?.parentElement.querySelector("span");
       const nextSrc = normalizeImageUrl(src || fallbackSrc);
+      const fallback = normalizeImageUrl(fallbackSrc);
 
       if (!image) return;
 
@@ -1441,6 +1442,10 @@
 
       image.onerror = () => {
         image.onerror = null;
+        if (fallback && fallback !== nextSrc) {
+          image.src = fallback;
+          return;
+        }
         image.removeAttribute("src");
         image.hidden = true;
         if (placeholder) placeholder.hidden = false;
@@ -1466,8 +1471,12 @@
 
       if (!image || image.dataset.manualUpload === "true") return;
       image.classList.toggle("fill", Boolean(values.productImageUrl));
-      const configImage = configCatalog.find((item) => item.label === values.config)?.image || "";
-      setImageBox("productImage", values.productImageUrl || configImage);
+      const configItem = configCatalog.find((item) => item.label === values.config);
+      const configImage = configItem?.image || "";
+      const leftConfigImage = configItem && normalizeArmrestInput(values.armrest) === "왼쪽"
+        ? `assets/configs/${configItem.code}-L.png`
+        : "";
+      setImageBox("productImage", values.productImageUrl || leftConfigImage || configImage, configImage);
     }
 
     function updateOptionImages() {
